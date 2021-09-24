@@ -2,10 +2,10 @@
 import socket
 import sys
 
-BUF_SIZE = 160
+BUF_SIZE = 1024
 #HOST = ''
 HOST = '10.21.75.90'
-PORT = 12311
+PORT = 12399
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # TCP socket
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # More on this later
 sock.bind((HOST, PORT)) # Claim messages sent to port "PORT"
@@ -17,7 +17,11 @@ while True:
     data = client.recv(BUF_SIZE) # recvfrom not needed since address is known
     s = data.decode()
     print(s)
-    reply = ("Recieved: " + s).encode('utf-8')
+    if len(s) > 160:
+        t = s[0:160]
+    else:
+        t = s
+    reply = ("Recieved: " + t + "\n").encode('utf-8')
     client.sendall(reply) # Destination IP and port implicit due to accept call
     client.close() # Termination
     sys.exit()
