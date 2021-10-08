@@ -162,20 +162,21 @@ def send_individually(s, sock):
     for c in s:
         sock.sendall(str(c).encode('utf-8'))
     return get_line(sock)
+    
+def test_final_put():    
+    sock = setup_cnx(-1)
+    fragmented_put_cmd = 'PUTabcdefghThis is a test\nX'
+    if send_individually(fragmented_put_cmd, sock) != b'OK':
+        print(b'Last put failed')
+    else:
+        print(b'Last put ok')
+    sock.close()
 
-sock = setup_cnx(-1)
-fragmented_put_cmd = 'PUTabcdefghThis is a test\nX'
-if send_individually(fragmented_put_cmd, sock) != b'OK':
-    print(b'Last put failed')
-else:
-    print(b'Last put ok')
-sock.close()
-
-sock = setup_cnx(-2)
-fragmented_get_cmd = 'GETabcdefgh\n'
-if send_individually(fragmented_get_cmd, sock) != b'This is a test':
-    print(b'Last get failed')
-else:
-    print(b'Last get ok')
-sock.close()
+    sock = setup_cnx(-2)
+    fragmented_get_cmd = 'GETabcdefgh\n'
+    if send_individually(fragmented_get_cmd, sock) != b'This is a test':
+        print(b'Last get failed')
+    else:
+        print(b'Last get ok')
+    sock.close()
 
