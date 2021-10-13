@@ -170,6 +170,8 @@ def test_final_put():
         print(b'Last put failed')
     else:
         print(b'Last put ok')
+
+    assert output ==  b'OK\n'
     sock.close()
 
     sock = setup_cnx(-2)
