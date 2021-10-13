@@ -166,21 +166,14 @@ def send_individually(s, sock):
 def test_final_put():    
     sock = setup_cnx(-1)
     fragmented_put_cmd = 'PUTabcdefghThis is a test\nX'
-    if send_individually(fragmented_put_cmd, sock) != b'OK':
-        print(b'Last put failed')
-        output = b'NO\n'
-    else:
-        print(b'Last put ok')
-        output = b'OK\n'
-
+    output = send_individually(fragmented_put_cmd, sock) != b'OK':
     assert output ==  b'OK\n'
     sock.close()
 
+def test_final_get(): 
     sock = setup_cnx(-2)
     fragmented_get_cmd = 'GETabcdefgh\n'
-    if send_individually(fragmented_get_cmd, sock) != b'This is a test':
-        print(b'Last get failed')
-    else:
-        print(b'Last get ok')
+    output = send_individually(fragmented_get_cmd, sock) != b'This is a test':
+    assert output ==  b'This is a test'
     sock.close()
 
