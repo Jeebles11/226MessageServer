@@ -167,7 +167,7 @@ def test_final_put():
     sock = setup_cnx(-1)
     fragmented_put_cmd = 'PUTabcdefghThis is a test\nX'
     output = send_individually(fragmented_put_cmd, sock)
-    assert output ==  b'OK\n'
+    assert output ==  b'OK'
     sock.close()
 
 def test_final_get(): 
