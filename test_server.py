@@ -132,13 +132,12 @@ def send_put_msg(sock, num):
 
 def send_get_msg(sock, num, key, msg):
     sock.close()
-
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((HOST, PORT))
     print('Client', num, 'sending', GET_CMD, key)
     sock.sendall((GET_CMD + key + '\n').encode('utf-8'))
     data = get_line(sock)
-    print('Client', num, 'received', ('' if msg.encode('utf-8') == data else 'in') + 'correct message')
+    assert msg.encode('utf-8') == data
 
 def test_multithreading():
     NUM_SESSIONS = 5
