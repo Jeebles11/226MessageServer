@@ -168,8 +168,10 @@ def test_final_put():
     fragmented_put_cmd = 'PUTabcdefghThis is a test\nX'
     if send_individually(fragmented_put_cmd, sock) != b'OK':
         print(b'Last put failed')
+        output = b'NO\n'
     else:
         print(b'Last put ok')
+        output = b'OK\n'
 
     assert output ==  b'OK\n'
     sock.close()
