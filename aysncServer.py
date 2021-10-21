@@ -15,7 +15,7 @@ GOOD_PUT_REPLY = "OK\n"
 MAX_MESSAGE_BYTES = 160
 BUF_SIZE = 1024
 HOST = ''
-PORT = 12345
+PORT = 12333
 
 messageDict = {} #global message dictionary
 locks = [] #for this purpose we don't really require an array, but will keep it so in the future, we can add more semaphores if we need. 
@@ -80,7 +80,7 @@ async def get_command(fullS, writer):
         try:
             locks[0].acquire()
             messageToReturn = messageDict[messageToReturnKey]
-            reply = (messageToReturn + '\n').encode('utf-8') ########################
+            reply = (messageToReturn + "\n").encode('utf-8')
         except Exception:
             pass
         finally:
@@ -101,7 +101,7 @@ async def start_connect(reader, writer):
     #print('Client:', client.getpeername()) # Destination IP and port
     
     data = await reader.readline()
-    fullS = data.decode('utf-8').strip()
+    fullS = data.decode('utf-8')
     command = fullS[0:CMD_LENGTH]
 
     try:
