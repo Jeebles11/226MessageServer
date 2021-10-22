@@ -102,6 +102,7 @@ async def start_connect(reader, writer):
     
     data = await reader.readline()
     fullS = data.decode('utf-8').strip()
+    print(fullS + " recieved from client")
     command = fullS[0:CMD_LENGTH]
 
     try:
