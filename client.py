@@ -3,35 +3,45 @@ import asyncio
 import sys
 import random 
 import traceback
+import string
 
 SERVER_HOST = sys.argv[1]
 SERVER_PORT = sys.argv[2]
 KEY_LENGTH = 8
 
+#takes no params, generates a random key for the next message in the linked list
+# get random key of length KEY_LENGTH ( 8 ) with letters(upperCase & lowercase) + digits
 def generateKey():
-    randomKey = random.randint(12345070, 12345680)        #smaller range for testing FIXME: DO ALPHANUM KEY!
-    #randomKey = random.randint(10000000, 99999999)          #could potentially cause a collision ? use alphanum
+    characters = string.ascii_letters + string.digits
+    randomKey = ''.join(random.choice(characters) for i in range(KEY_LENGTH + 1)) #plus one to ensure we get the full 8 chars
+    #print("Random password is:", randomKey)
+
     return randomKey
 
+#this function takes in the empty node in the linked list, and prompts user to enter another message
+#I split this function and generateMessageToServer into two seperate functions to adhere to the rule that "a function should do just one thing",
+#  Let me know if that is the right idea in this situation :)
+#I left this function as await, because usr could be slow writing the input. is this right?
 async def promptForMessage(message_key):
+    print("Please enter a new message: \n")
+    usrString = input()
+
+    return usrString
+    
+def generateMessageToServer(message_key, usrString):
     randomKey = generateKey()
-    
-    randomKey = str(randomKey)
+    return(("PUT"+ message_key + randomKey + usrString + "\n").encode('utf-8')) #first KEY_LENGTH (8) bytes of message is the "nextKey"
 
-    print("Enter a message for key "+ message_key + "\n")
-    messageToSend = ("PUT"+ message_key + randomKey + input() + "\n").encode('utf-8') #first KEY_LENGTH (8) bytes of message is the "nextKey"
 
-    return messageToSend
-    
 
 async def recieveMessage(reader):
     data = await reader.readline()
-    #print(str(data) + " is the data in recMessage")
-    print(f'Received: {data.decode("utf-8")}')
+    decodedData = data.decode("utf-8")
+    print(f'Received: {decodedData[9 : ]}')
     return data
     
 async def writeMessage(toSend, writer):
-    print(str(toSend) + " is the message about to send")
+    #print(str(toSend) + " is the message about to send")
     writer.write(toSend)
     
     
@@ -56,8 +66,8 @@ async def client():
             message_key = (data[ : KEY_LENGTH]).decode("utf-8")
             data = await createConnection(( "GET"+ message_key + '\n').encode('utf-8'))
 
-        newMessage = await promptForMessage(message_key)
-        await createConnection(newMessage) #createConnection returns 'Data', but since it's just the put message, we don't need to do anything with it
+        newUsrMessage = await promptForMessage(message_key)
+        await createConnection(generateMessageToServer(message_key, newUsrMessage)) #createConnection returns 'Data', but since it's just the put message, we don't need to do anything with it
 
     except Exception as details:
                     print(details)

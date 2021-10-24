@@ -1,7 +1,4 @@
 #!/usr/bin/python3   #lock should happen JUST as you access the dictionary- 
-import socket
-import threading
-import time
 import traceback
 import asyncio
 
@@ -15,11 +12,9 @@ GOOD_PUT_REPLY = "OK\n"
 MAX_MESSAGE_BYTES = 160
 BUF_SIZE = 1024
 HOST = ''
-PORT = 12333
+PORT = 12345
 
 messageDict = {} #global message dictionary
-locks = [] #for this purpose we don't really require an array, but will keep it so in the future, we can add more semaphores if we need. 
-locks.append(threading.Semaphore()) #add the semaphore to lock array
 
 #this function takes the reply generated from the program, and sends it over to the client via TCP.
 #the param reply is either NO (used in put command) or \n (used in get command). Sends OK if PUT command was succesful,
@@ -52,15 +47,13 @@ async def put_command(fullS, writer):
     else:
         savedMessage = fullS[MESSAGE_MAX : ]
         
-        if (len(savedMessage) > MAX_MESSAGE_BYTES) or (len(savedMessage) == 0) or (savedMessage.isspace() == True): #if user enters a message longer than 160 bytes in length, rejects 
-            #reply = ("No, message too long\n").encode('utf-8')
+        if (len(savedMessage) > MAX_MESSAGE_BYTES) or (len(savedMessage) == 0) or (savedMessage.isspace() == True): 
+            #if message too long, message empty, or only whitespace, reject
             await send_reply(reply, writer)
         
         else:
-            locks[0].acquire()
             global messageDict 
             messageDict [messageKey] = savedMessage
-            locks[0].release()
             reply = (GOOD_PUT_REPLY).encode('utf-8')
             await send_reply(reply, writer)
         
@@ -78,28 +71,20 @@ async def get_command(fullS, writer):
         await send_reply(reply, writer)
     else:
         try:
-            locks[0].acquire()
             messageToReturn = messageDict[messageToReturnKey]
-            reply = (messageToReturn + '\n').encode('utf-8') ########################
+            reply = (messageToReturn + '\n').encode('utf-8') 
         except Exception:
             pass
         finally:
-            locks[0].release()
             await send_reply(reply, writer)
 ########## END GET COMMAND ##########
 
-#reads in data until either a newline is found, or buffer sized is reached
-#PARAMS: the active client (thread) is passed in. 
 
-# async def get_line(reader):
-#     return await reader.readline()
 
 #this function runs off the newly made thread, and is responsible for reading in data and managing the commands
 #main 'workhorse' function 
 #any exceptions thrown will print details to the server command line 
 async def start_connect(reader, writer):
-    #print('Client:', client.getpeername()) # Destination IP and port
-    
     data = await reader.readline()
     fullS = data.decode('utf-8').strip()
     #print(fullS + " recieved from client")
@@ -113,8 +98,9 @@ async def start_connect(reader, writer):
         ########## START GET COMMAND ##########
         elif command == GET_CMD:
             await get_command(fullS, writer)
-
+        ##########if you wanted to add more commands, they go here ###########
         else:
+            #you put something weird, reject
             reply = (BAD_PUT_REPLY).encode('utf-8')
             await send_reply(reply, writer)
         
