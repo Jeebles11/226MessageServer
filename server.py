@@ -15,7 +15,7 @@ GOOD_PUT_REPLY = "OK\n"
 MAX_MESSAGE_BYTES = 160
 BUF_SIZE = 1024
 HOST = ''
-PORT = 12345
+PORT = 12333
 
 messageDict = {} #global message dictionary
 locks = [] #for this purpose we don't really require an array, but will keep it so in the future, we can add more semaphores if we need. 
@@ -102,7 +102,7 @@ async def start_connect(reader, writer):
     
     data = await reader.readline()
     fullS = data.decode('utf-8').strip()
-    print(fullS + " recieved from client")
+    #print(fullS + " recieved from client")
     command = fullS[0:CMD_LENGTH]
 
     try:

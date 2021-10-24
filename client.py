@@ -6,50 +6,58 @@ import traceback
 
 SERVER_HOST = sys.argv[1]
 SERVER_PORT = sys.argv[2]
-async def promptForMessage(message_key):
-    randomKey = random.randint(12345070, 12345680)        #smaller range for testing
+KEY_LENGTH = 8
+
+def generateKey():
+    randomKey = random.randint(12345070, 12345680)        #smaller range for testing FIXME: DO ALPHANUM KEY!
     #randomKey = random.randint(10000000, 99999999)          #could potentially cause a collision ? use alphanum
+    return randomKey
+
+async def promptForMessage(message_key):
+    randomKey = generateKey()
+    
     randomKey = str(randomKey)
 
-    reader, writer = await asyncio.open_connection(SERVER_HOST, SERVER_PORT)
     print("Enter a message for key "+ message_key + "\n")
-    messageToSend = "PUT"+ message_key + randomKey + input() + "\n" #first 8 bytes of message is the "nextKey"
-    messageToSend = messageToSend.encode()
-    #print(str(messageToSend) + " is the message to send")
-    
-    #writer.write((messageToSend).encode('utf-8') + b'\n')
-    writer.write(messageToSend)
-    data = await reader.readline() # more on this on the next slides
-    print(f'Received: {data.decode("utf-8")}')
+    messageToSend = ("PUT"+ message_key + randomKey + input() + "\n").encode('utf-8') #first KEY_LENGTH (8) bytes of message is the "nextKey"
 
-    await writer.drain()
-    writer.close() # reader has no close() function
-    await writer.wait_closed() # wait until writer completes close()
+    return messageToSend
+    
 
 async def recieveMessage(reader):
-    print()
+    data = await reader.readline()
+    #print(str(data) + " is the data in recMessage")
+    print(f'Received: {data.decode("utf-8")}')
+    return data
+    
+async def writeMessage(toSend, writer):
+    print(str(toSend) + " is the message about to send")
+    writer.write(toSend)
+    
+    
+async def createConnection(messageToSend):
+    reader, writer = await asyncio.open_connection(SERVER_HOST, SERVER_PORT)
+    await writeMessage(messageToSend, writer)
+
+    data = await recieveMessage(reader)
+
+    await writer.drain()
+    writer.close() # wait until the sever response comes through before closing the connection (the read function)
+    await writer.wait_closed() # wait until writer completes close()
+    return data
 
 async def client():
     try:
-        if (True):
-            reader, writer = await asyncio.open_connection(SERVER_HOST, SERVER_PORT)
-            message_key = sys.argv[3]
-            print(sys.argv[1], sys.argv[2], sys.argv[3])
-            writer.write(("GET"+sys.argv[3]).encode('utf-8') + b'\n')
-            await writer.drain()
-            data = await reader.readline() # more on this on the next slides
-            print(f'Received: {data.decode("utf-8")}')
-            
-            while(len(data) > 2):
-                readerr, writerr = await asyncio.open_connection(SERVER_HOST, SERVER_PORT)
-                message_key = (data[ : 8]).decode("utf-8")
-                writerr.write(("GET"+message_key).encode('utf-8') + b'\n')
-                data = await readerr.readline()
-                print(f'Received: {data.decode("utf-8")}')
+        message_key = sys.argv[3]
+        
+        data = await createConnection(( "GET"+ message_key + '\n').encode('utf-8'))  #any way I can not repeat myself here?
 
-            
-            
-            await promptForMessage(message_key)
+        while(len(data) > 2):
+            message_key = (data[ : KEY_LENGTH]).decode("utf-8")
+            data = await createConnection(( "GET"+ message_key + '\n').encode('utf-8'))
+
+        newMessage = await promptForMessage(message_key)
+        await createConnection(newMessage) #createConnection returns 'Data', but since it's just the put message, we don't need to do anything with it
 
     except Exception as details:
                     print(details)
