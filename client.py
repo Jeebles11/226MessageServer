@@ -27,28 +27,20 @@ async def promptForMessage(message_key):
     usrString = input()
 
     return usrString
-    
+
+#takes no params
+# calls upon generateKey to create a Key of KEY_LENGTH chars (8), then concats it with the orig key and usr provided string. 
+# This message is then returned, and sent by createConnection.    
 def generateMessageToServer(message_key, usrString):
     randomKey = generateKey()
     return(("PUT"+ message_key + randomKey + usrString + "\n").encode('utf-8')) #first KEY_LENGTH (8) bytes of message is the "nextKey"
 
-
-
-async def recieveMessage(reader):
-    data = await reader.readline()
-    decodedData = data.decode("utf-8")
-    print(f'Received: {decodedData[9 : ]}')
-    return data
-    
-async def writeMessage(toSend, writer):
-    #print(str(toSend) + " is the message about to send")
-    writer.write(toSend)
-    
-    
+#takes in the complete message to send to the server as a param
+#first, uses asyncio to create a new connection, then calls upon writer to send off the message, next reads in the response
+#and finally closes up the connection. 
 async def createConnection(messageToSend):
     reader, writer = await asyncio.open_connection(SERVER_HOST, SERVER_PORT)
     await writeMessage(messageToSend, writer)
-
     data = await recieveMessage(reader)
 
     await writer.drain()
@@ -56,11 +48,35 @@ async def createConnection(messageToSend):
     await writer.wait_closed() # wait until writer completes close()
     return data
 
+#uses the reader created by createConnection to read in the next message from the server
+#returns the decoded data to createConnection (and then back to the client() function)
+async def recieveMessage(reader):
+    data = await reader.readline()
+    decodedData = data.decode("utf-8")
+    print(f'Received: {decodedData[KEY_LENGTH + 1 : ]}') 
+    return data
+
+#takes in the complete, endcoded message to send, and aysncio writer in as params
+#buffer drain and connection closes after the response is read in (in function createConnection())    
+async def writeMessage(toSend, writer):
+    #print(str(toSend) + " is the message about to send")
+    writer.write(toSend)
+    
+    
+
+#this function is the 'main' runner of the program. 
+#takes in no params, however gets vars off the command line using sys.argv. 
+#exceptions could be thrown (without the try catch), if usr inputs invalid input.
+
+#if there is no messages for a user provided key, starts a new message 'thread' (think reddit thread, not a multithreading thread)
+#the message thread is implemented with a link list of keys. Each message containing the pointer to the next message in the first KEY_LENGTH (8) chars of the message
+#if there is messages in the thread, continue printing messages until reaching a newline(empty node), then prompt usr for next message
+#after new message is entered by user and sent, close the connection.
 async def client():
     try:
         message_key = sys.argv[3]
         
-        data = await createConnection(( "GET"+ message_key + '\n').encode('utf-8'))  #any way I can not repeat myself here?
+        data = await createConnection(( "GET"+ message_key + '\n').encode('utf-8'))  #any way I can not repeat myself here? i need the data at least once to know if it's the first 
 
         while(len(data) > 2):
             message_key = (data[ : KEY_LENGTH]).decode("utf-8")

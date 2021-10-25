@@ -82,7 +82,8 @@ async def get_command(fullS, writer):
 
 
 #this function runs off the newly made thread, and is responsible for reading in data and managing the commands
-#main 'workhorse' function 
+#asyncio reader and writer co routine is started in main(), and passes in writer and reader to this function
+# Only TWO vaild commands (for now ) PUT & GET 
 #any exceptions thrown will print details to the server command line 
 async def start_connect(reader, writer):
     data = await reader.readline()

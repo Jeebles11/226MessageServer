@@ -157,6 +157,7 @@ def test_multithreading():
     for (i, sock, (key, msg)) in msgs:
         send_get_msg(sock, i, key, msg)
 
+
 def send_individually(s, sock):
     for c in s:
         sock.sendall(str(c).encode('utf-8'))
