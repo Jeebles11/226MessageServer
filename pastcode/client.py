@@ -12,12 +12,10 @@ PORT = 12345
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # TCP socket
 sock.connect((HOST, PORT)) # Initiates 3-way handshake
-print('Client:', sock.getsockname()) # Source IP and source port
-print("what is ur guess 1-100")
-num = b''
-num = num +  int(input())
-data = struct.pack('!B', num)
-sock.sendall(data) # Destination IP and port implicit due to connect call
+
+ourMess = "PUT12345678ThisisaClientTest".encode('utf-8')
+
+sock.sendall(ourMess) # Destination IP and port implicit due to connect call
 reply = sock.recv(BUF_SIZE) # recvfrom not needed since address is known
 print('Reply:', reply)
 sock.close() # Termination
