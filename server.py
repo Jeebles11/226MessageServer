@@ -11,7 +11,7 @@ BAD_GET_REPLY = "\n"
 GOOD_PUT_REPLY = "OK\n"
 MAX_MESSAGE_BYTES = 160
 BUF_SIZE = 1024
-HOST = '::1'
+HOST = ''
 PORT = 12345
 
 messageDict = {} #global message dictionary
