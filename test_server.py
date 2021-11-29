@@ -135,7 +135,7 @@ def send_get_msg(sock, num, key, msg):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((HOST, PORT))
     print('Client', num, 'sending', GET_CMD, key)
-    sock.sendall((GET_CMD + key + '\n').encode('utf-8'))
+    sock.sendall(("NO " + GET_CMD + key + '\n').encode('utf-8'))
     data = get_line(sock)
     assert msg.encode('utf-8') == data
 
@@ -167,13 +167,13 @@ def test_final_put():
     sock = setup_cnx(-1)
     fragmented_put_cmd = 'PUTabcdefghThis is a test\nX'
     output = send_individually(fragmented_put_cmd, sock)
-    assert output ==  b'OK'
+    assert output ==  b'NO This is a test'
     sock.close()
 
 def test_final_get(): 
     sock = setup_cnx(-2)
     fragmented_get_cmd = 'GETabcdefgh\n'
     output = send_individually(fragmented_get_cmd, sock)
-    assert output ==  b'This is a test'
+    assert output ==  b'NO This is a test'
     sock.close()
 
