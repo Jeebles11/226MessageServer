@@ -11,7 +11,7 @@ BAD_GET_REPLY = "\n"
 GOOD_PUT_REPLY = "OK\n"
 MAX_MESSAGE_BYTES = 160
 BUF_SIZE = 1024
-HOST = ''
+HOST = '::1'
 PORT = 12345
 
 messageDict = {} #global message dictionary
@@ -37,8 +37,11 @@ def get_message_key_from_fullString(fullS):
 #If all standards ARE met, the semaphore locks access to the dictonary while the thread writes in a new entry.
 #params: fullS is the entire decoded string sent from client, client is the active client(thread)
 async def put_command(fullS, writer):
+    global messageDict
     reply = (BAD_PUT_REPLY).encode('utf-8')
     messageKey = get_message_key_from_fullString(fullS)
+
+    
     
     if (len(fullS) < MESSAGE_MAX ) or (messageKey.isalnum() == False): 
         #reply = ("No, command and key too short \n").encode('utf-8')
@@ -51,12 +54,25 @@ async def put_command(fullS, writer):
             #if message too long, message empty, or only whitespace, reject
             await send_reply(reply, writer)
         
-        else:
-            global messageDict 
-            messageDict [messageKey] = savedMessage
-            reply = (GOOD_PUT_REPLY).encode('utf-8')
-            await send_reply(reply, writer)
+        # elif len(messageDict [messageKey]) > 2:
+        #     print("MESSAGE ALREDY EXISTS FOR THIS KEY!!!!")
+        #     await send_reply("mesE".encode('utf-8'), writer)
+        else: 
+            try:
+                DATA = messageDict [messageKey]
+
+            except:                                      #if we get an exception, that means we ARE allowed to install a new message in the dict (cuz it's empty)
+                messageDict [messageKey] = savedMessage
+                reply = (GOOD_PUT_REPLY).encode('utf-8')
+                await send_reply(reply, writer)
+                return
+
+            
+            currentMessage = messageDict[messageKey].encode('utf-8')
+            print("MESSAGE ALREDY EXISTS FOR THIS KEY!!!!")
+            await send_reply(("NO " + messageDict[messageKey]).encode('utf-8'), writer)
         
+    #print(messageDict[messageKey]   + "  is dict check")
         ########## END PUT COMMAND ##########
 
 #this function handles checking various scenarios within the command 'GET'. ensures key is valid before access
@@ -72,7 +88,8 @@ async def get_command(fullS, writer):
     else:
         try:
             messageToReturn = messageDict[messageToReturnKey]
-            reply = (messageToReturn + '\n').encode('utf-8') 
+            #print(messageToReturn + " is the mess to return ")
+            reply = ("NO " + messageToReturn + '\n').encode('utf-8') 
         except Exception:
             pass
         finally:
