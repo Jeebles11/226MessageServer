@@ -96,7 +96,7 @@ def test_message_size():
     #assert output == b'NO\n'
 
     output = transmit(getKey)
-    assert output == (putMsg + '\n').encode('utf-8')
+    assert output == ("NO " + putMsg + '\n').encode('utf-8')
 
 
 def get_line(current_socket):
@@ -156,6 +156,7 @@ def test_multithreading():
 
     for (i, sock, (key, msg)) in msgs:
         send_get_msg(sock, i, key, msg)
+    assert(true)
 
 
 def send_individually(s, sock):
