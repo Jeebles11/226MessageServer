@@ -90,7 +90,7 @@ def test_message_size():
         assert output == b'OK\n'
 
         output = transmit(getKey)
-        assert output == (putMsg + '\n').encode('utf-8')
+        assert output == ("NO " + putMsg + '\n').encode('utf-8')
 
     output = transmit(putKey + putMsg + 'X')
     #assert output == b'NO\n'
